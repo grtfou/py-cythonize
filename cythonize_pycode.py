@@ -102,4 +102,5 @@ if __name__ == '__main__':
         cmdclass=dict(
             build_ext=MyBuildCode
         ),
+        test_suite="tests.run_tests",
     )
