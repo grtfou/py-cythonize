@@ -23,8 +23,12 @@ import yaml
 
 def _is_exist_pyfile(path='.'):
     """
-    Checking python code in the dictionary.
+    Checking python code in the directory.
     """
+    # If the directory has 'ignore' file. skip it.
+    for entry in glob.glob(path + '/ignore'):
+        return False
+
     for entry in glob.glob(path + '/*.py'):
         return True
 
@@ -33,7 +37,7 @@ def _is_exist_pyfile(path='.'):
 
 def _get_dirs(path='.'):
     """
-    Getting all modules name (dictionaries name).
+    Getting all modules name (directories name).
     """
     dirs_name = []
     for entry in glob.glob(path + '/**', recursive=True):
