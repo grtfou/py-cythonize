@@ -80,9 +80,9 @@ if __name__ == '__main__':
         with open('project_setting.yaml', 'r') as iif:
             settings = yaml.load(iif)
     except FileNotFoundError:
-        print('Please check README.md and create "project_setting.yaml"')
+        print('Please create "project_setting.yaml" and give settings.')
     except (yaml.scanner.ScannerError):
-        print('Please check your YAML format')
+        print('Please check your YAML format.')
 
     setup(
         name=settings.get('project_name', 'no-project-name'),
