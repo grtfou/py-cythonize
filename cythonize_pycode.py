@@ -2,8 +2,8 @@
 Use Cython to cythonize the project.
 
 Command:
-  * $ python setup.py build_ext --inplace
-  * $ python setup.py bdist_wheel
+  * $ python cythonize_pycode.py build_ext --inplace
+  * $ python cythonize_pycode.py bdist_wheel
 
 Ref:
   * http://cython.readthedocs.io/en/latest/index.html
