@@ -11,7 +11,6 @@ Ref:
 """
 import os
 import glob
-import random
 from setuptools import setup
 from setuptools.extension import Extension
 
@@ -43,7 +42,8 @@ def _get_dirs(path='.'):
     for entry in glob.glob(path + '/**', recursive=True):
         if os.path.isdir(entry):
             dirs_name.append((
-                entry[2:], entry[2:].split('/')[-1]
+                '/'.join(entry.split('/')[1:]), entry.split('/')[-1]
+                # entry[2:], entry[2:].split('/')[-1]
             ))
 
     return dirs_name
@@ -54,17 +54,30 @@ def _build_so():
     Building all python code to Cython code.
     """
     module_list = []
+    sources = []
+    root_module_name = settings.get('project_name', 'no-project-name')
+    black_list = ['tests']
+
     for dirname in _get_dirs():
         path = dirname[0]
         dn = dirname[1]
+        if path.split('/')[0] in black_list:
+            continue
 
         if _is_exist_pyfile(path):
-            sources = [path + '/*.py']
+            # sources.append(path.rstrip('/') + '/*.py')
+            sources = [path.rstrip('/') + '/*.py']
+            module_name = "{}.*".format(root_module_name)
+
+            print('=' * 30)
+            print(sources)
+            print(module_name)
+            print('=' * 30)
             module_list.append(
                 Extension(
-                    "{}.*".format(dn),
+                    module_name,
                     sources=sources,
-                    language=random.choice(['c', 'c++']),
+                    language='c'
                 )
             )
 
@@ -103,4 +116,5 @@ if __name__ == '__main__':
             build_ext=MyBuildCode
         ),
         test_suite="tests.run_tests",
+        # packages=[""]
     )

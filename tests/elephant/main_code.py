@@ -1,8 +1,8 @@
-import aaa.hello
+import lion.hello
 
 
 def run():
-    output = aaa.hello.say_hi('Micky Mouse')
+    output = lion.hello.say_hi('Micky Mouse test')
     print(output)
     return 1
 
