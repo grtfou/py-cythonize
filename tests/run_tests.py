@@ -4,16 +4,13 @@ import unittest
 class TestCythonizeCode(unittest.TestCase):
 
     def test_func_code(self):
-        from lion import hello
+        from my_test_zoo.elephant.monkey import coffee
 
-        print(hello.say_hi(name='Python'))
+        assert coffee.get_coffee(cup=2) == 3
 
     def test_package_code(self):
-        from elephant import main_code
-        from elephant.cat import coffee
-
-        main_code.run()
-        print(coffee.get_coffee(2))
+        from my_test_zoo.lion import hello
+        assert hello.say_hi('Micky Mouse') == 'Hi, Micky Mouse'
 
 
 if __name__ == '__main__':

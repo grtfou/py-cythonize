@@ -14,8 +14,10 @@ $ pip install dist/<your_project_name ...>.whl
 ## Unit Test
 
 ```bash
-$ python cythonize_pycode.py test
-...
+$ python -m unittest tests/run_tests.py
+.
+----------------------------------------------------------------------
+Ran 2 tests in 0.063s
 
 OK
 ```
