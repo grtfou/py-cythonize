@@ -11,13 +11,52 @@ Ref:
 """
 import os
 import glob
+import shutil
 from setuptools import setup
 from setuptools.extension import Extension
+from distutils.command.clean import clean
 
 from Cython.Build import cythonize
 from Cython.Distutils import build_ext
 
 import yaml
+
+
+settings = {}
+try:
+    with open('project_setting.yaml', 'r') as iif:
+        settings = yaml.load(iif)
+except FileNotFoundError:
+    print('Please create "project_setting.yaml" and give settings.')
+except (yaml.scanner.ScannerError):
+    print('Please check your YAML format.')
+
+mypj = settings.get('project_name', 'no-project-name')
+
+
+class Clean(clean):
+    """
+    Delete all compile files.
+
+    How to:
+        $ python cythonize_pycode.py clean
+    """
+
+    def run(self):
+        clean.run(self)
+
+        for subdir in (mypj,):
+            root = os.path.join(os.path.dirname(__file__), subdir)
+            for dirname, dirs, _ in os.walk(root):
+                for fn in glob.glob('{0}/*.py[ocx]'.format(dirname)):
+                    os.remove(fn)
+                for fn in glob.glob('{0}/*.c'.format(dirname)):
+                    os.remove(fn)
+                for fn in glob.glob('{0}/*.so'.format(dirname)):
+                    os.remove(fn)
+                for dn in dirs:
+                    if dn == '__pycache__':
+                        shutil.rmtree(os.path.join(dirname, dn))
 
 
 def _is_exist_pyfile(path='.'):
@@ -55,12 +94,11 @@ def _build_so():
     """
     module_list = []
     sources = []
-    root_module_name = settings.get('project_name', 'no-project-name')
+    root_module_name = mypj
     black_list = ['tests']
 
     for dirname in _get_dirs():
         path = dirname[0]
-        dn = dirname[1]
         if path.split('/')[0] in black_list:
             continue
 
@@ -92,15 +130,6 @@ class MyBuildCode(build_ext):
 
 
 if __name__ == '__main__':
-    settings = {}
-    try:
-        with open('project_setting.yaml', 'r') as iif:
-            settings = yaml.load(iif)
-    except FileNotFoundError:
-        print('Please create "project_setting.yaml" and give settings.')
-    except (yaml.scanner.ScannerError):
-        print('Please check your YAML format.')
-
     setup(
         name=settings.get('project_name', 'no-project-name'),
         version=settings.get('version', '0.0.0'),
@@ -112,9 +141,10 @@ if __name__ == '__main__':
             compiler_directives=dict(
                 always_allow_keywords=True
             )),
-        cmdclass=dict(
-            build_ext=MyBuildCode
-        ),
+        cmdclass={
+            'clean': Clean,
+            'build_ext': MyBuildCode
+        },
         test_suite="tests.run_tests",
         # packages=[""]
     )
