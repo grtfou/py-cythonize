@@ -2,14 +2,16 @@
 Use Cython to cythonize the project.
 
 ```bash
-$ cp cythonize_pycode.py ../<your_project_root_path>
-$ cp project_setting.yaml ../<your_project_root_path>
-$ cd <your_project_root_path>
-$ vim  project_setting.yaml
+$ TARGET_PATH=<YOUR_PROJECT_ROOT_PATH>
+
+$ cp cythonize_pycode.py $TARGET_PATH
+$ cp project_setting.yaml $TARGET_PATH
+$ cd $TARGET_PATH
+$ vim project_setting.yaml
 
 $ python cythonize_pycode.py bdist_wheel
 
-$ pip install dist/<your_project_name ...>.whl
+$ pip install $TARGET_PATH/dist/<your_project_name ...>.whl
 # Then.. Enjoy it
 ```
 
