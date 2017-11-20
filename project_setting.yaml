@@ -1,5 +1,6 @@
 --- # This is an example settings
 project_name: my-test-zoo
+module_path: my_test_zoo
 version: 1.0.0
 desc: This is an example.
 author: example

@@ -12,12 +12,11 @@ Ref:
 import os
 import glob
 import shutil
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from distutils.command.clean import clean
-
+from distutils.command.build_py import build_py
 from Cython.Build import cythonize
-from Cython.Distutils import build_ext
 
 import yaml
 
@@ -31,7 +30,8 @@ except FileNotFoundError:
 except (yaml.scanner.ScannerError):
     print('Please check your YAML format.')
 
-mypj = settings.get('project_name', 'no-project-name')
+MY_PROJ_PATH = settings.get("module_path", ".")
+FULL_SETUP_DIRNAME = os.path.abspath(os.path.dirname(__file__))
 
 
 class Clean(clean):
@@ -45,7 +45,7 @@ class Clean(clean):
     def run(self):
         clean.run(self)
 
-        for subdir in (mypj,):
+        for subdir in (MY_PROJ_PATH,):
             root = os.path.join(os.path.dirname(__file__), subdir)
             for dirname, dirs, _ in os.walk(root):
                 for fn in glob.glob('{0}/*.py[ocx]'.format(dirname)):
@@ -59,74 +59,36 @@ class Clean(clean):
                         shutil.rmtree(os.path.join(dirname, dn))
 
 
-def _is_exist_pyfile(path='.'):
+class BuildCode(build_py):
     """
-    Checking python code in the directory.
+    Build cython files (.so)
     """
-    # If the directory has 'ignore' file. skip it.
-    for entry in glob.glob(path + '/ignore'):
-        return False
 
-    for entry in glob.glob(path + '/*.py'):
-        return True
-
-    return False
-
-
-def _get_dirs(path='.'):
-    """
-    Getting all modules name (directories name).
-    """
-    dirs_name = []
-    for entry in glob.glob(path + '/**', recursive=True):
-        if os.path.isdir(entry):
-            dirs_name.append((
-                '/'.join(entry.split('/')[1:]), entry.split('/')[-1]
-                # entry[2:], entry[2:].split('/')[-1]
-            ))
-
-    return dirs_name
+    def find_package_modules(self, package, package_dir):
+        modules = build_py.find_package_modules(self, package, package_dir)
+        for package, module, filename in modules:
+            if module not in ('__init__',):
+                continue
+            yield package, module, filename
 
 
-def _build_so():
-    """
-    Building all python code to Cython code.
-    """
-    module_list = []
-    sources = []
-    root_module_name = mypj
-    black_list = ['tests']
-
-    for dirname in _get_dirs():
-        path = dirname[0]
-        if path.split('/')[0] in black_list:
-            continue
-
-        if _is_exist_pyfile(path):
-            # sources.append(path.rstrip('/') + '/*.py')
-            sources = [path.rstrip('/') + '/*.py']
-            module_name = "{}.*".format(root_module_name)
-
-            print('=' * 30)
-            print(sources)
-            print(module_name)
-            print('=' * 30)
-            module_list.append(
-                Extension(
-                    module_name,
-                    sources=sources,
-                    language='c'
-                )
-            )
-
-    return module_list
-
-
-class MyBuildCode(build_ext):
-    """
-    Customizition build script if it needs.
-    """
-    pass
+def find_ext_packages():
+    ret = []
+    for root, _, files in (os.walk(os.path.join(
+                           FULL_SETUP_DIRNAME, MY_PROJ_PATH))):
+        commonprefix = os.path.commonprefix([FULL_SETUP_DIRNAME, root])
+        for filename in files:
+            if not filename.endswith(('.py', '.c')):
+                # no python or c code
+                continue
+            if filename in ('__init__.py',):
+                # Block list
+                continue
+            full = os.path.join(root, filename)
+            relpath = os.path.join(root, filename).split(commonprefix)[-1][1:]
+            module = os.path.splitext(relpath)[0].replace(os.sep, '.')
+            ret.append(Extension(module, [full]))
+    return ret
 
 
 if __name__ == '__main__':
@@ -136,14 +98,15 @@ if __name__ == '__main__':
         description=settings.get('desc', ''),
         author=settings.get('author', ''),
         ext_modules=cythonize(
-            _build_so(),
+            find_ext_packages(),
             build_dir="build",
             compiler_directives=dict(
                 always_allow_keywords=True
             )),
+        packages=find_packages(),
         cmdclass={
             'clean': Clean,
-            'build_ext': MyBuildCode
+            'build_py': BuildCode
         },
         test_suite="tests.run_tests",
         # packages=[""]
